@@ -6,7 +6,7 @@
 module load nextflow
 
 # Change to a good place to store the nextflow 'work' directory with logged info
-cd /scratch/negishi/allen715/shortread_pan/
+cd /scratch/negishi/jeon96/shortread_pan/
 
 # Run Nextflow
 # nextflow run main_ShortreadPangenome_MCPan.nf -with-report report.html -with-timeline timeline.html -with-trace
