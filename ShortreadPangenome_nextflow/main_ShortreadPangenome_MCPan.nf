@@ -49,7 +49,7 @@ process step1{
 
     script:
     """
-    cd /scratch/negishi/allen715/shortread_pan/
+    cd /scratch/negishi/jeon96/shortread_pan/
     bash Step1_SequencePreprocessing_nf.sh ${sra} ${db} ${params.N}
     """
 }
