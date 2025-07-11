@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 params.csv = "" // e.g., "/scratch/negishi/jeon96/shortread_pan/params.csv"
 
 //option to change from default directory to path of choice
-params.savepath = "/scratch/negishi/allen715/shortread_pan/"
+params.savepath = "" // e.g., "/scratch/negishi/jeon96/shortread_pan/"
 
 //user email information
 params.email = "" //your email address; e.g., "jeon96@purdue.edu"
@@ -126,7 +126,7 @@ process step2_4{
 
 process step2_5{
     tag "$step2_5"
-    clusterOptions '--job-name=Step2.5 -n 64 -N 1 -t 14-00:00:00 -A highmem --mail-user $params.email --mail-type END,FAIL'
+    clusterOptions '--job-name=Step2.5 -n 64 -N 1 -t 5-00:00:00 -A fnrdewoody --mail-user $params.email --mail-type END,FAIL'
     //errorStrategy 'ignore' #don't want to ignore errors for this process
 
     input:
@@ -137,7 +137,24 @@ process step2_5{
 
     script:
     """
-    bash Step2.5_FromAssemblingToLinPan_nf.sh ${sra} ${ref} ${linpan} ${contig} ${GENOME} ${N} ${APP} ${MASURCA} ${GENOME_SIZE} ${PREFIX} ${MASURCA_CONFIG_UNMAPPED2}
+    bash Step2.5_FromAssemblingToLinPan_nf.sh ${sra} ${ref} ${linpan} ${contig} ${params.GENOME} ${params.N} ${params.APP} ${params.MASURCA} ${params.GENOME_SIZE} ${params.PREFIX} ${params.MASURCA_CONFIG_UNMAPPED2}
+    """
+}
+
+process step2_6{
+    tag "$step2_6"
+    clusterOptions '--job-name=Step2.6 -n 64 -N 1 -t 1-00:00:00 -A highmem --mail-user $params.email --mail-type END,FAIL'
+    //errorStrategy 'ignore' #don't want to ignore errors for this process
+
+    input:
+    tuple val(sra), val(db), val(ref), val(linpan), val(contig)
+
+    output:
+    tuple val(sra), val(db), val(ref), val(linpan), val(contig)
+
+    script:
+    """
+    bash Step2.6_FromAssemblingToLinPan_nf.sh ${sra} ${ref} ${linpan} ${contig} ${params.GENOME} ${params.N} ${params.APP} ${params.MASURCA} ${params.GENOME_SIZE} ${params.PREFIX} ${params.MASURCA_CONFIG_UNMAPPED2}
     """
 }
 
