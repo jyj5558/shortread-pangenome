@@ -35,22 +35,15 @@ cd ${VGPAN}/augmented
 mkdir -p ./mapped/
 cd ./mapped/
 
-for i in $(ls -lt ${SRA}/cleaned | grep "fq.gz" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq); do
-  id=$(echo $i | cut -d "_" -f 1)
-  bwa mem -t ${N} -M -R "@RG\tID:group1\tSM:${i}\tPL:illumina\tLB:lib1\tPU:unit1" ${LINPAN}/${PREFIX}_panref2_sorted.fa ${SRA}/filtered/${i}fixed_R1.fq  ${SRA}/filtered/${i}fixed_R2.fq > ${id}.sam
-  PicardCommandLine SortSam --TMP_DIR ./tmp/ --INPUT ${id}.sam --OUTPUT ${id}_sorted.bam --SORT_ORDER coordinate
-done
-
-### Marking duplicates
-for i in $(ls -lt ${SRA}/cleaned | grep "fq.gz" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq); do
-  id=$(echo $i | cut -d "_" -f 1)
-  PicardCommandLine MarkDuplicates --INPUT ${id}_sorted.bam  --OUTPUT ${id}_sorted.marked.bam --METRICS_FILE ${id}_metrics.txt
-  PicardCommandLine BuildBamIndex --INPUT ${id}_sorted.marked.bam 
+for i in `ls -lt ${SRA}/raw | grep -Ei "fastq|fq" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq | cut -d "_" -f 1`; do # this can only be correctly applied when forward and reverse sequences are represented as "R"1 and "R"2
+  bwa mem -t ${N} -M -R "@RG\tID:group1\tSM:${i}\tPL:illumina\tLB:lib1\tPU:unit1" ${LINPAN}/${PREFIX}_panref2_sorted.fa  ${SRA}/Nremoved/${i}_*1.fq_Ns_removed ${SRA}/Nremoved/${i}_*2.fq_Ns_removed > ${i}.sam
+  PicardCommandLine SortSam --TMP_DIR ./tmp/ --INPUT ${i}.sam --OUTPUT ${i}_sorted.bam --SORT_ORDER coordinate
+  PicardCommandLine MarkDuplicates --INPUT ${i}_sorted.bam --OUTPUT ${i}_sorted.marked.bam --METRICS_FILE ${i}_metrics.txt
+  PicardCommandLine BuildBamIndex --INPUT ${i}_sorted.marked.bam
 done
 
 ### Running GATK4 HaplotypeCaller
 module load gatk4
-for i in $(ls -lt ${SRA}/cleaned | grep "fq.gz" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq); do
-  id=$(echo $i | cut -d "_" -f 1)
+for i in `ls -lt ${SRA}/raw | grep -Ei "fastq|fq" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq | cut -d "_" -f 1`; do # this can only be correctly applied when forward and reverse sequences are represented as "R"1 and "R"2
   gatk  --java-options "-Xmx100G -XX:ParallelGCThreads=4" HaplotypeCaller -R ${LINPAN}/${PREFIX}_panref2_sorted.fa -I ${id}_sorted.marked.bam  -O ${VGPAN}/augmented/called/snp/${id}.haplotypecaller.vcf.gz --tmp-dir . --native-pair-hmm-threads ${N}
 done
