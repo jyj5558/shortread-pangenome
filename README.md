@@ -1,5 +1,5 @@
 # Short-read Pangenome
-The scripts are optimized to be run in Purdue's RCAC cluster system. 
+The scripts are optimized for paired-end short reads to be run in Purdue's RCAC cluster system. 
 Details may be different from your computing system. You need to check your system's requirement and modify accordingly.
 
 Step 0 was used for generating and processing the benchmarking data for the paper (TBA).
@@ -23,5 +23,7 @@ To use the automated nextflow pipe to build short-read pangenomes:
 (2) Choose what short-read pangenome you will build (e.g., MC Pangenome) then check the main .nf file (e.g., main_ShortreadPangenome_MCPan.nf) and nf.sh file (e.g., ShortreadPangenome_MCPan_nf.sh). Fill in or modify directory paths (e.g., 'params.csv = ""', 'cd ~') and clusterOptions according to your computing system.
 
 (3) In the 'bin' directory, there are bash scripts which will be called by the nextflow script. Check all the relevant ones for your desired pangenome and modify how to load or call each program in the bash scripts.
+
+(4) run the nf.sh file; e.g., "sbatch ShortreadPangenome_MCPan_nf.sh"
 
 Contact: jeon96@purdue.edu for any inquiries.
