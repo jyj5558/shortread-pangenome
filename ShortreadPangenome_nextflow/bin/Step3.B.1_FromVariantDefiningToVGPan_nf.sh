@@ -22,28 +22,35 @@ module load htslib
 module load nf-core
 
 mkdir -p ${VGPAN}/augmented/called/snp/
+
+## Calling SNPs (and small SVs < 50 bp) 
+### Indexing reference
+cd ${LINPAN}
+
+PicardCommandLine CreateSequenceDictionary --REFERENCE ${PREFIX}_panref2_sorted.fa --OUTPUT ${PREFIX}_panref2_sorted.dict
+bwa index -a bwtsw ${PREFIX}_panref2_sorted.fa
+
+### Mapping reads
 cd ${VGPAN}/augmented
+mkdir -p ./mapped/
+cd ./mapped/
 
-## Running sarek with simulated samples to augment the linear pangenome
-### Preparing an input sheet
-ls -lrt ${SRA}/raw | grep -Ei "fastq|fq" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq | cut -d "_" -f 1 | sort > sample; \
-num_samples=$(wc -l < sample)
-printf '1\n%.0s' $(seq 1 ${num_samples}) > lane ;  \
-ls -1 ${SRA}/Nremoved/${i}_*1.fq_Ns_removed | sort > fastq_1;  \
-ls -1 ${SRA}/Nremoved/${i}_*2.fq_Ns_removed | sort > fastq_2;  \
-echo "patient,sample,lane,fastq_1,fastq_2" > header; \
-paste sample sample lane fastq_1 fastq_2 | tr "\t" "," > content; \
-cat header content > samplesheet.csv; \
-rm header content sample lane fastq_1 fastq_2 primary alternate primary_fastq_1 primary_fastq_2 alternate_fastq_1 alternate_fastq_2 # generate samplesheet.csv as an input to sarek
+for i in $(ls -lt ${SRA}/cleaned | grep "fq.gz" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq); do
+  id=$(echo $i | cut -d "_" -f 1)
+  bwa mem -t ${N} -M -R "@RG\tID:group1\tSM:${i}\tPL:illumina\tLB:lib1\tPU:unit1" ${LINPAN}/${PREFIX}_panref2_sorted.fa ${SRA}/filtered/${i}fixed_R1.fq  ${SRA}/filtered/${i}fixed_R2.fq > ${id}.sam
+  PicardCommandLine SortSam --TMP_DIR ./tmp/ --INPUT ${id}.sam --OUTPUT ${id}_sorted.bam --SORT_ORDER coordinate
+done
 
-# ### Running sarek pipeline
-# nextflow run nf-core/sarek -r 3.3.2 -profile singularity -work-dir ${VGPAN}/augmented/ -resume -params-file ${VGPAN}/augmented/nf-params.json \
-# --input ${VGPAN}/augmented/mapped.csv --outdir ${VGPAN}/called/snp/ --tools haplotypecaller --skip_tools baserecalibrator \
-# --trim_fastq true --genome custom --fasta ${LINPAN}/${PREFIX}_panref2_sorted.fa --fasta_fai ${LINPAN}/${PREFIX}_panref2_sorted.fa.fai --igenomes_ignore true \
-# --email ${EMAIL}
+### Marking duplicates
+for i in $(ls -lt ${SRA}/cleaned | grep "fq.gz" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq); do
+  id=$(echo $i | cut -d "_" -f 1)
+  PicardCommandLine MarkDuplicates --INPUT ${id}_sorted.bam  --OUTPUT ${id}_sorted.marked.bam --METRICS_FILE ${id}_metrics.txt
+  PicardCommandLine BuildBamIndex --INPUT ${id}_sorted.marked.bam 
+done
 
+### Running GATK4 HaplotypeCaller
 module load gatk4
-for i in `cat ${BASE}/original/SRR_Acc_List.txt`; do
-  mkdir -p ${VGPAN}/called/snp/variant_calling/${i}/
-  gatk  --java-options "-Xmx100G -XX:ParallelGCThreads=4" HaplotypeCaller -R ${LINPAN}/${PREFIX}_panref2_sorted.fa -I ${VGPAN}/aligned/$(i}.${PREFIX}_surject.sorted.marked.bam  -O $#{VGPAN}/called/snp/variant_calling/${i}/${i}.haplotypecaller.vcf.gz --tmp-dir .
+for i in $(ls -lt ${SRA}/cleaned | grep "fq.gz" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq); do
+  id=$(echo $i | cut -d "_" -f 1)
+  gatk  --java-options "-Xmx100G -XX:ParallelGCThreads=4" HaplotypeCaller -R ${LINPAN}/${PREFIX}_panref2_sorted.fa -I ${id}_sorted.marked.bam  -O ${VGPAN}/augmented/called/snp/${id}.haplotypecaller.vcf.gz --tmp-dir . --native-pair-hmm-threads ${N}
 done
