@@ -26,15 +26,6 @@ PicardCommandLine CreateSequenceDictionary --REFERENCE ${PREFIX}_panref2_sorted.
 bwa index -a bwtsw ${PREFIX}_panref2_sorted.fa
 
 cd ${VGPAN}/augmented
-mkdir -p ./mapped/tmp/
-cd ./mapped/
-
-for i in `ls -lt ${SRA}/raw | grep -Ei "fastq|fq" | tr -s ' ' | cut -d " " -f 9 | cut -d "R" -f 1 | uniq | cut -d "_" -f 1`; do # this can only be correctly applied when forward and reverse sequences are represented as "R"1 and "R"2
-  bwa mem -t ${N} -M -R "@RG\tID:group1\tSM:${i}\tPL:illumina\tLB:lib1\tPU:unit1" ${LINPAN}/${PREFIX}_panref2_sorted.fa  ${SRA}/Nremoved/${i}_*1.fq_Ns_removed ${SRA}/Nremoved/${i}_*2.fq_Ns_removed > ${i}.sam
-  PicardCommandLine SortSam --TMP_DIR ./tmp/ --INPUT ${i}.sam --OUTPUT ${i}_sorted.bam --SORT_ORDER coordinate
-  PicardCommandLine MarkDuplicates --INPUT ${i}_sorted.bam --OUTPUT ${i}_sorted.marked.bam --METRICS_FILE ${i}_metrics.txt
-  PicardCommandLine BuildBamIndex --INPUT ${i}_sorted.marked.bam
-done
 
 ### Running delly2
 cd ${VGPAN}/augmented/called/  
@@ -121,9 +112,9 @@ bcftools convert --thread ${N} -Ov -o sample_delly.filtered2.vcf sample_delly.fi
 #sed -f snp_replace.sed sample_SNP.filtered.recode.vcf > sample_SNP.filtered.replaced.vcf # fix sample names
 
 bcftools query -l sample_delly.filtered2.vcf > samples.txt # make a sample list
-bcftools view -S samples.txt sample_delly.filtered2.recode.vcf > sample_delly.filtered2.ordered.vcf # order samples; check the sample header! bcftools view sim_delly.filtered2.ordered.vcf | grep -v "##" | head
+bcftools view -S samples.txt sample_delly.filtered2.recode.vcf > sample_delly.filtered2.ordered.vcf # order samples; check the sample header! "bcftools view sample_delly.filtered2.ordered.vcf | grep -v "##" | head"
 cat sample_delly.filtered2.ordered.vcf | grep -v "SVTYPE=BND" | grep -v "SVTYPE=DUP" > sample_delly.filtered3.ordered.vcf # remove unsupported SV types in vg construct (i.e., DUP, BND)
-bcftools view -S samples.txt sample_SNP.filtered.recode.vcf > sample_SNP.filtered.ordered.vcf # order samples; check the sample header! bcftools view sim_SNP.filtered.ordered.vcf | grep -v "##" | head
+bcftools view -S samples.txt sample_SNP.filtered.recode.vcf > sample_SNP.filtered.ordered.vcf # order samples; check the sample header! "bcftools view sample_SNP.filtered.ordered.vcf | grep -v "##" | head"
 
 bcftools convert --thread ${N} -Oz -o sample_SNP.filtered.vcf.gz sample_SNP.filtered.ordered.vcf
 bcftools convert --thread ${N} -Oz -o sample_delly.filtered3.vcf.gz sample_delly.filtered3.ordered.vcf
