@@ -137,7 +137,7 @@ process step2_5{
 
     script:
     """
-    bash Step2.5_FromAssemblingToLinPan_nf.sh ${sra} ${ref} ${linpan} ${contig} ${params.GENOME} ${params.N} ${params.APP} ${params.MASURCA} ${params.GENOME_SIZE} ${params.PREFIX} ${params.MASURCA_CONFIG_UNMAPPED2}
+    bash Step2.5_FromAssemblingToLinPan_nf.sh ${sra} ${ref} ${linpan} ${contig} ${params.GENOME} ${params.N} ${params.APP} ${params.MASURCA} ${params.GENOME_SIZE} ${params.PREFIX} 
     """
 }
 
@@ -154,7 +154,7 @@ process step2_6{
 
     script:
     """
-    bash Step2.6_FromAssemblingToLinPan_nf.sh ${sra} ${ref} ${linpan} ${contig} ${params.GENOME} ${params.N} ${params.APP} ${params.MASURCA} ${params.GENOME_SIZE} ${params.PREFIX} ${params.MASURCA_CONFIG_UNMAPPED2}
+    bash Step2.6_FromAssemblingToLinPan_nf.sh ${sra} ${ref} ${linpan} ${contig} ${params.GENOME} ${params.N} ${params.APP} ${params.MASURCA} ${params.GENOME_SIZE} ${params.PREFIX} 
     """
 }
 
