@@ -58,3 +58,9 @@ samtools view -@ ${N} -b -F 4 -f 128 mapped.sam > mapped_r.bam # mapped reverse 
 samtools merge -@ ${N} mapped_merged.bam mapped_f.bam mapped_r.bam
 samtools sort -@ ${N} -n -o mapped_sorted.bam mapped_merged.bam
 bamtools convert -in mapped_sorted.bam -out mapped_merged.fastq -format fastq
+
+samtools view -@ ${N} -b -f 68 mapped.sam > unmapped_f.bam # unmapped forward reads
+samtools view -@ ${N} -b -f 132 mapped.sam > unmapped_r.bam # unmapped reverse reads
+samtools merge -@ ${N} unmapped_merged.bam unmapped_f.bam unmapped_r.bam
+samtools sort -@ ${N} -n -o unmapped_sorted.bam unmapped_merged.bam
+bamtools convert -in unmapped_sorted.bam -out unmapped_merged.fastq -format fastq
