@@ -13,9 +13,19 @@ PREFIX=${10}
 MASURCA_CONFIG_UNMAPPED2=${11}
 
 # Please note that this script was based on Hu et al. (2020) in Legume Genomics: Methods and Protocols (and its scripts) AND Yao et al. (2015) in Genome Biology
+module load biocontainers
+module load biopython 
+module load boost
+module load megahit
 
 cd ${SRA}/
 cd mapped2/
+
+python3 ${APP}/splitUP.py unmapped2_merged.fastq
+
+mv unmapped2_merged.fastq_R1.fastq unmapped2_R1.fastq
+mv unmapped2_merged.fastq_R2.fastq unmapped2_R2.fastq
+mv unmapped2_merged.fastq_unpaired.fastq unmapped2_unpaired.fastq
 
 # Assemblyng unmapped reads independently 
 ## MaSuRCA assembly using unmapped reads
