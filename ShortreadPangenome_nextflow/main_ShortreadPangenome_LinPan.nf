@@ -73,9 +73,8 @@ process step2_1{
 
 process step2_2{
     tag "$step2_2"
-    clusterOptions '--job-name=Step2.2 -n 64 -N 1 -t 1-00:00:00 -A highmem --mail-user $params.email --mail-type END,FAIL'
-    errorStrategy 'retry'
-    maxRetries 5
+    clusterOptions '--job-name=Step2.2 -n 128 -N 1 -t 1-00:00:00 -A highmem --mail-user $params.email --mail-type END,FAIL'
+    //errorStrategy 'ignore' #don't want to ignore errors for this process
 
     input:
     tuple val(sra), val(db), val(ref), val(linpan), val(contig)
@@ -92,7 +91,8 @@ process step2_2{
 process step2_3{
     tag "$step2_3"
     clusterOptions '--job-name=Step2.3 -n 64 -N 1 -t 1-00:00:00 -A highmem --mail-user $params.email --mail-type END,FAIL'
-    //errorStrategy 'ignore' #don't want to ignore errors for this process
+    errorStrategy 'retry'
+    maxRetries 5
 
     input:
     tuple val(sra), val(db), val(ref), val(linpan), val(contig)
