@@ -38,7 +38,7 @@ params.email = "" //your email address; e.g., "jeon96@purdue.edu"
 
 process step1{
     tag "$step1"
-    clusterOptions '--job-name=Step1 -n 32 -N 1 -t 5-00:00:00 -A fnrdewoody --mail-user $params.email --mail-type END,FAIL' 
+    clusterOptions '--job-name=Step1 -n 64 -N 1 -t 5-00:00:00 -A fnrdewoody --mail-user $params.email --mail-type END,FAIL' 
     //errorStrategy 'ignore' #don't want to ignore errors for this process
 
     input:
@@ -73,10 +73,9 @@ process step2_1{
 
 process step2_2{
     tag "$step2_2"
-    clusterOptions '--job-name=Step2.2 -n 32 -N 1 -t 1-00:00:00 -A highmem --mail-user $params.email --mail-type END,FAIL'
-    errorStrategy 'retry'
-    maxRetries 5
-
+    clusterOptions '--job-name=Step2.2 -n 128 -N 1 -t 1-00:00:00 -A highmem --mail-user $params.email --mail-type END,FAIL'
+    //errorStrategy 'ignore' #don't want to ignore errors for this process
+    
     input:
     tuple val(sra), val(db), val(ref), val(linpan), val(contig)
 
@@ -92,7 +91,8 @@ process step2_2{
 process step2_3{
     tag "$step2_3"
     clusterOptions '--job-name=Step2.3 -n 64 -N 1 -t 1-00:00:00 -A highmem --mail-user $params.email --mail-type END,FAIL'
-    //errorStrategy 'ignore' #don't want to ignore errors for this process
+    errorStrategy 'retry'
+    maxRetries 5
 
     input:
     tuple val(sra), val(db), val(ref), val(linpan), val(contig)
@@ -158,6 +158,23 @@ process step2_6{
     """
 }
 
+process step2_7{
+    tag "$step2_7"
+    clusterOptions '--job-name=Step2.7 -n 128 -N 1 -t 1-00:00:00 -A highmem --mail-user $params.email --mail-type END,FAIL'
+    //errorStrategy 'ignore' #don't want to ignore errors for this process
+
+    input:
+    tuple val(sra), val(db), val(ref), val(linpan), val(contig)
+
+    output:
+    tuple val(sra), val(db), val(ref), val(linpan), val(contig)
+
+    script:
+    """
+    bash Step2.7_FromAssemblingToLinPan_nf.sh ${sra} ${ref} ${linpan} ${contig} ${params.GENOME} ${params.N} ${params.APP} ${params.MASURCA} ${params.GENOME_SIZE} ${params.PREFIX} ${params.MASURCA_CONFIG_UNMAPPED2}
+    """
+}
+
 process step3{
     tag "$step3"
     clusterOptions '--job-name=Step3 -n 32 -N 1 -t 5-00:00:00 -A fnrdewoody --mail-user $params.email --mail-type END,FAIL'
@@ -196,5 +213,6 @@ workflow{
         | step2_4 \
         | step2_5 \
         | step2_6 \
+        | step2_7 \
         | step3 
 }
