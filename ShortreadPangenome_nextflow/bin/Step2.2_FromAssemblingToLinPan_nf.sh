@@ -11,6 +11,25 @@ MASURCA=$8
 GENOME_SIZE=$9
 PREFIX=${10}
 
+# Please note that this script was based on Hu et al. (2020) in Legume Genomics: Methods and Protocols (and its scripts) AND Yao et al. (2015) in Genome Biology
+
+cd ${SRA}/
+
+# Extracting mapped and unmapped reads (on the linear representative genome) separately
+module purge
+module load biocontainers
+module load samtools
+module load bamtools
+module load biopython
+
+cd ./mapped
+
+samtools view -@ ${N} -b -F 4 -f 64 mapped.sam > mapped_f.bam # mapped forward reads
+samtools view -@ ${N} -b -F 4 -f 128 mapped.sam > mapped_r.bam # mapped reverse reads
+samtools merge -@ ${N} mapped_merged.bam mapped_f.bam mapped_r.bam
+samtools sort -@ ${N} -n -o mapped_sorted.bam mapped_merged.bam
+bamtools convert -in mapped_sorted.bam -out mapped_merged.fastq -format fastq
+
 python ${APP}/splitUP.py mapped_merged.fastq # splitUP.py script from Hu et al. (2020)
 
 # ###
@@ -43,12 +62,6 @@ python ${APP}/splitUP.py mapped_merged.fastq # splitUP.py script from Hu et al. 
 # done
 
 # ###
-
-module purge
-module load biocontainers
-module load samtools
-module load bamtools
-module load biopython
 
 samtools view -@ ${N} -b -f 68 mapped.sam > unmapped_f.bam # unmapped forward reads
 samtools view -@ ${N} -b -f 132 mapped.sam > unmapped_r.bam # unmapped reverse reads
