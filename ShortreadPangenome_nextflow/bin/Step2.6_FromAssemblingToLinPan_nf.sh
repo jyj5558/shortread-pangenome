@@ -121,7 +121,6 @@ samtools view -@ ${N} -b -f 132 mapped2.sam > unmapped2_r.bam # unmapped reverse
 samtools merge -@ ${N} unmapped2_merged.bam unmapped2_f.bam unmapped2_r.bam
 samtools sort -@ ${N} -n -o unmapped2_sorted.bam unmapped2_merged.bam
 bamtools convert -in unmapped2_sorted.bam -out unmapped2_merged.fastq -format fastq
-python ${APP}/splitUP.py unmapped2_merged.fastq
 
 mv unmapped2_merged.fastq_R1.fastq unmapped2_R1.fastq
 mv unmapped2_merged.fastq_R2.fastq unmapped2_R2.fastq
