@@ -175,6 +175,23 @@ process step2_7{
     """
 }
 
+process step2_8{
+    tag "$step2_8"
+    clusterOptions '--job-name=Step2.8 -n 64 -N 1 -t 5-00:00:00 -A fnrdewoody --mail-user $params.email --mail-type END,FAIL'
+    //errorStrategy 'ignore' #don't want to ignore errors for this process
+
+    input:
+    tuple val(sra), val(db), val(ref), val(linpan), val(contig)
+
+    output:
+    tuple val(sra), val(db), val(ref), val(linpan), val(contig)
+
+    script:
+    """
+    bash Step2.8_FromAssemblingToLinPan_nf.sh ${sra} ${ref} ${linpan} ${contig} ${params.GENOME} ${params.N} ${params.APP} ${params.MASURCA} ${params.GENOME_SIZE} ${params.PREFIX} ${params.MASURCA_CONFIG_UNMAPPED2}
+    """
+}
+
 /*
 ========================================================================================
 ========================================================================================
@@ -195,6 +212,7 @@ workflow{
         | step2_4 \
         | step2_5 \
         | step2_6 \
-        | step2_7
+        | step2_7 \
+        | step2_8
 }
 
